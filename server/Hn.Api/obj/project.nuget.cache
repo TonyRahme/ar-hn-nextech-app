@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "2nSR1TrAUJk=",
+  "success": true,
+  "projectFilePath": "/Users/tonyrahme/Documents/GitHub/ar-hn-nextech-app/server/Hn.Api/Hn.Api.csproj",
+  "expectedPackageFiles": [
+    "/Users/tonyrahme/.nuget/packages/microsoft.aspnetcore.openapi/9.0.9/microsoft.aspnetcore.openapi.9.0.9.nupkg.sha512",
+    "/Users/tonyrahme/.nuget/packages/microsoft.openapi/1.6.17/microsoft.openapi.1.6.17.nupkg.sha512"
+  ],
+  "logs": []
+}
