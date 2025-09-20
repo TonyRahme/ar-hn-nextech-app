@@ -3,17 +3,21 @@ import { CommonModule } from '@angular/common';
 import { BehaviorSubject, finalize } from 'rxjs';
 import { ItemDto, PagedResult } from 'src/app/models/hackerNews.model';
 import { HnApiService } from 'src/app/services/hn-api.service';
+import { MatButtonModule }  from '@angular/material/button';
+import { MatCardModule }    from '@angular/material/card';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-hn-newest-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MatButtonModule, MatCardModule, MatPaginatorModule, MatIconModule],
   templateUrl: './hn-newest-page.component.html',
   styleUrls: ['./hn-newest-page.component.scss']
 })
 export class HnNewestPageComponent implements OnInit {
 
-  sizes: number[] = [10, 20, 30, 40];
+  pageSizeOptions: number[] = [10, 20, 30, 50];
   page: number = 1;
   pageSize: number = 20;
   data$ = new BehaviorSubject<PagedResult<ItemDto> | null>(null);
@@ -53,10 +57,9 @@ export class HnNewestPageComponent implements OnInit {
     }
   }
 
-  changePageSize(v: number | string) {
-    const n = Number(v) || 20;
-    this.pageSize = n;
-    this.page = 1;
+  onPage(e: PageEvent) {
+    this.page = e.pageIndex + 1;
+    this.pageSize = e.pageSize;
     this.load();
   }
 
@@ -67,6 +70,10 @@ export class HnNewestPageComponent implements OnInit {
   }
 
   trackId(_: number, it: ItemDto) {return it.id }
+
+  plainText(html?: string) {
+    return (html || '').replace(/<[^>]+>/g, '');
+  }
 
   
 }

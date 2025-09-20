@@ -1,39 +1,51 @@
-<section class="container">
-    <header class="header">
-      <h2>Newest Stories</h2>
-      <div class="controls">
-        <label>
-          Page size:
-          <select [value]="pageSize" (change)="changePageSize($any($event.target).value)">
-            <option *ngFor="let s of sizes" [value]="s">{{ s }}</option>
-          </select>
-        </label>
-      </div>
-    </header>
+<section class="wrap">
+    <div class="controls">
+      <span class="grow"></span>
+      <span class="muted" *ngIf="(data$ | async) as d">Total: {{ d.totalCount }}</span>
+    </div>
 
     <div class="error" *ngIf="(error$ | async) as err">{{ err }}</div>
 
-    <ng-container *ngIf="(data$ | async) as d; else loadingTpl">
-      <ul class="list">
-        <li *ngFor="let it of d.items; trackBy: trackId">
-          <a *ngIf="it.url; else noLink" [href]="it.url" target="_blank" rel="noopener">
-            {{ it.title || '(no title)' }}
-          </a>
-          <ng-template #noLink>
-            <span>{{ it.title || '(no title)' }}</span>
-          </ng-template>
-          <small>by {{ it.by || 'unknown' }} • score {{ it.score ?? 0 }}</small>
-        </li>
-      </ul>
+    <div class="grid" *ngIf="(data$ | async) as d; else loadingTpl">
+      <mat-card class="story-card" *ngFor="let it of d.items; trackBy: trackId">
+        <mat-card-header>
+          <mat-card-title>
+            <h2 class="title">
+            <a class="title-link"
+                *ngIf="it.url; else noLink"
+                [href]="it.url" target="_blank" rel="noopener">
+                {{ it.title || '(no title)' }}
+                <mat-icon class="title-icon" aria-hidden="true">open_in_new</mat-icon>
+            </a>
+            <ng-template #noLink>
+                <span>{{ it.title || '(no title)' }}</span>
+            </ng-template>
+            </h2>
+          </mat-card-title>
+        </mat-card-header>
 
-      <footer class="pager">
-        <button (click)="prev()" [disabled]="page === 1 || (loading$ | async)">Prev</button>
-        <span>Page {{ page }} / {{ totalPages(d) }}</span>
-        <button (click)="next()" [disabled]="!d.hasNext || (loading$ | async)">Next</button>
-      </footer>
-    </ng-container>
+        <mat-card-content>
+          <p class="clamp" *ngIf="it.text as t">{{ plainText(t) }}</p>
+        </mat-card-content>
+
+        <mat-card-actions align="end">
+          <span class="meta">by {{ it.by || 'unknown' }}</span>
+          <span class="spacer"></span>
+          <mat-icon inline>whatshot</mat-icon>
+          <span>{{ it.score ?? 0 }}</span>
+        </mat-card-actions>
+      </mat-card>
+    </div>
 
     <ng-template #loadingTpl>
       <div class="loading" *ngIf="(loading$ | async)">Loading…</div>
     </ng-template>
+
+    <mat-paginator
+      [length]="(data$ | async)?.totalCount"
+      [pageIndex]="page - 1"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="pageSizeOptions"
+      (page)="onPage($event)">
+    </mat-paginator>
   </section>
