@@ -31,7 +31,7 @@ namespace Hn.Api.Services
         public async Task<ItemDto?> GetItemAsync(int id, CancellationToken ct)
         {
             return await GetCachedAsync(
-                key: "hn:item:{id}", ttl: ItemTtl,
+                key: $"hn:item:{id}", ttl: ItemTtl,
                 factory: async token =>
                 {
                     using var result = await _http.GetAsync($"/v0/item/{id}.json", ct);
