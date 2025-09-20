@@ -1,0 +1,8 @@
+{
+  "name": "hn-app",
+  "private": true,
+  "devDependencies": { "concurrently": "^9.0.0" },
+  "scripts": {
+    "dev": "concurrently \"dotnet watch run --project server/Hn.Api\" \"npm --prefix client run start:proxy\""
+  }
+}
