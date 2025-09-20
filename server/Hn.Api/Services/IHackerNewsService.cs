@@ -10,7 +10,7 @@ namespace Hn.Api.Services
     {
         Task<IReadOnlyList<int>> GetNewestStoriesIdsAsync(CancellationToken ct = default);
         Task<ItemDto?> GetItemAsync(int id, CancellationToken ct = default);
-        Task<PagedResult<ItemDto>> GetNewestPageAsync(int page, int pageSize, CancellationToken ct = default);
+        Task<PagedResult<ItemDto>> GetNewestPageAsync(int page, int pageSize, string? search, CancellationToken ct = default);
         
     }
 }

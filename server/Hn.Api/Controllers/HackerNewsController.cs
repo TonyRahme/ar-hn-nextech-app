@@ -22,9 +22,10 @@ namespace Hn.Api.Controllers
         public async Task<ActionResult<PagedResult<ItemDto>>> GetNewestPage(
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 20,
+            [FromQuery] string? search = null,
             CancellationToken ct = default)
         {
-            var result = await hn.GetNewestPageAsync(page, pageSize, ct);
+            var result = await hn.GetNewestPageAsync(page, pageSize, search, ct);
             return Ok(result);
         }
 

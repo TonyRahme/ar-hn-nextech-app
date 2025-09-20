@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Hn.Api.Models;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -19,7 +20,7 @@ namespace Hn.Api.Services
         private readonly ILogger<HackerNewsService> _logger;
         private static readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = new();
         private static readonly TimeSpan NewestIdsTtl = TimeSpan.FromSeconds(30);
-        private static readonly TimeSpan ItemTtl      = TimeSpan.FromMinutes(10);
+        private static readonly TimeSpan ItemTtl = TimeSpan.FromMinutes(10);
 
 
         public HackerNewsService(HttpClient http, IMemoryCache cache, ILogger<HackerNewsService> logger)
@@ -54,37 +55,81 @@ namespace Hn.Api.Services
             ct: ct);
         }
 
-        public async Task<PagedResult<ItemDto>> GetNewestPageAsync(int page, int pageSize, CancellationToken ct = default)
+        public async Task<PagedResult<ItemDto>> GetNewestPageAsync(int page, int pageSize, string? search, CancellationToken ct = default)
         {
             if (page < 1) page = 1;
             if (pageSize <= 0 || pageSize > 100) pageSize = 20;
             var ids = await GetNewestStoriesIdsAsync();
-            var total = ids.Count;
-            var skip = (page - 1) * pageSize;
+            //No search
+            if (string.IsNullOrWhiteSpace(search))
+            {
+                var skip = (page - 1) * pageSize;
+                var slice = ids.Skip(skip).Take(pageSize).ToArray();
+                var items = await FetchItems(slice, ct);
+                return new PagedResult<ItemDto>(items, page, pageSize, ids.Count, skip + items.Count < ids.Count);
+            }
 
-            if (skip >= total)
-                return new PagedResult<ItemDto>(Array.Empty<ItemDto>(), page, pageSize, total, false);
+            //with search case-insensitive
+            var tokens = Tokenize(search!);
+            var matches = new List<ItemDto>();
+            var totalMatches = 0;
 
-            var slice = ids.Skip(skip).Take(pageSize).ToArray();
+            foreach (var id in ids)
+            {
+                var item = await GetItemAsync(id, ct);
+                if (item is null) continue;
 
+                var title = item.Title ?? string.Empty;
+                var text = StripTags(item.Text ?? string.Empty);
+
+                if (MatchesAllTokens(title, text, tokens))
+                {
+                    totalMatches++;
+                    var offset = (page - 1) * pageSize;
+                    if (totalMatches > offset && matches.Count < pageSize) matches.Add(item);
+                }
+            }
+
+            var hasNext = (page * pageSize) < totalMatches;
+
+            return new PagedResult<ItemDto>(matches, page, pageSize, totalMatches, hasNext);
+        }
+
+
+        //Helper functions
+
+        private async Task<List<ItemDto>> FetchItems(int[] ids, CancellationToken ct)
+        {
             const int maxConcurrency = 8;
-            var gate = new SemaphoreSlim(maxConcurrency);
-            var tasks = slice.Select(async id =>
+            using var gate = new SemaphoreSlim(maxConcurrency);
+            var tasks = ids.Select(async id =>
             {
                 await gate.WaitAsync(ct);
                 try { return await GetItemAsync(id, ct); }
                 finally { gate.Release(); }
             });
-
             var results = await Task.WhenAll(tasks);
-            var items = results.Where(e => e is not null && e.Url is not null)!.Cast<ItemDto>().ToList();
-
-            var hasNext = skip + pageSize < total;
-            return new PagedResult<ItemDto>(items, page, pageSize, total, hasNext);
+            return results.Where(x => x is not null)!.Cast<ItemDto>().ToList();
         }
 
+        private static string[] Tokenize(string q) =>
+    q.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-        //Helper functions
+        private static readonly Regex _tagRx = new("<[^>]+>", RegexOptions.Compiled);
+        private static string StripTags(string html) => _tagRx.Replace(html, " ");
+
+        private static bool MatchesAllTokens(string title, string text, string[] tokens)
+        {
+            foreach (var t in tokens)
+            {
+                if (!ContainsIgnoreCase(title, t) && !ContainsIgnoreCase(text, t))
+                    return false;
+            }
+            return true;
+        }
+        private static bool ContainsIgnoreCase(string s, string term) =>
+            s.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0;
+
 
         private async Task<T> GetCachedAsync<T>(
         string key,

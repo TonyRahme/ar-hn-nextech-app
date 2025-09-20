@@ -32,7 +32,7 @@ namespace Hn.Tests
         }
 
         [Fact]
-        public async Task When_GetLatest_Then_Returns_Ok_With_Id_List()
+        public async Task When_GetNewest_Then_Returns_Ok_With_Id_List()
         {
             var mockHttp = new MockHttpMessageHandler();
             mockHttp.When("https://hacker-news.firebaseio.com/v0/newstories.json")
@@ -56,7 +56,7 @@ namespace Hn.Tests
             });
         }).CreateClient();
 
-            var resp = await client.GetAsync("/api/hackernews/latest");
+            var resp = await client.GetAsync("/api/hackernews/newest");
             resp.StatusCode.Should().Be(HttpStatusCode.OK);
 
             var ids = await resp.Content.ReadFromJsonAsync<int[]>();
