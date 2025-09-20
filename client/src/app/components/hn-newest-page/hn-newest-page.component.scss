@@ -89,6 +89,15 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+.clamp p, .clamp div, .clamp ul, .clamp ol, .clamp li { 
+  display: inline; 
+  margin: 0; 
+  padding: 0;
+}
+
+.clamp a { text-decoration: underline; }
+
 .error {
   color: #fca5a5;
   margin: 0.5rem 0;

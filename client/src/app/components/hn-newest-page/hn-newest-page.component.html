@@ -25,7 +25,7 @@
         </mat-card-header>
 
         <mat-card-content>
-          <p class="clamp" *ngIf="it.text as t">{{ plainText(t) }}</p>
+          <div class="clamp" [innerHTML]="it.text || ''"></div>
         </mat-card-content>
 
         <mat-card-actions align="end">
