@@ -8,8 +8,8 @@ namespace Hn.Api.Services
 {
     public interface IHackerNewsService
     {
-        Task<IReadOnlyList<int>> GetNewestStoriesAsync();
-        Task<ItemDto?> GetItemAsync(int id);
+        Task<IReadOnlyList<int>> GetNewestStoriesAsync(CancellationToken ct);
+        Task<ItemDto?> GetItemAsync(int id, CancellationToken ct);
         
     }
 }

@@ -13,6 +13,8 @@ builder.Services.AddCors(options =>
          .AllowAnyMethod());
 });
 
+builder.Services.AddMemoryCache();
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

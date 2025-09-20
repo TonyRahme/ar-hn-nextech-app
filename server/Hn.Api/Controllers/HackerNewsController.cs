@@ -13,15 +13,15 @@ namespace Hn.Api.Controllers
     public class HackerNewsController(IHackerNewsService hn) : ControllerBase
     {
         [HttpGet("latest")]
-        public async Task<ActionResult<IReadOnlyList<int>>> GetLatest()
+        public async Task<ActionResult<IReadOnlyList<int>>> GetLatest(CancellationToken ct)
         {
-            return Ok(await hn.GetNewestStoriesAsync());
+            return Ok(await hn.GetNewestStoriesAsync(ct));
         }
 
         [HttpGet("item/{id}")]
-    public async Task<ActionResult<ItemDto>> GetItem([FromRoute] int id)
+    public async Task<ActionResult<ItemDto>> GetItem([FromRoute] int id, CancellationToken ct)
     {
-        var item = await hn.GetItemAsync(id);
+        var item = await hn.GetItemAsync(id, ct);
         return item is null ? NotFound() : Ok(item);
     }
     }
