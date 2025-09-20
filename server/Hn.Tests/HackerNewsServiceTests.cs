@@ -33,7 +33,7 @@ namespace Hn.Tests
 
             var client = CreateService(mockHttp, out var cache);
 
-            var result = await client.GetNewestStoriesAsync(CancellationToken.None);
+            var result = await client.GetNewestStoriesIdsAsync(CancellationToken.None);
 
             result.Should().Equal(1, 2, 3);
 

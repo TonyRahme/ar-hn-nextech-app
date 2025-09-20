@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Hn.Api.Models;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace Hn.Api.Services
@@ -28,7 +29,7 @@ namespace Hn.Api.Services
             _logger = logger;
         }
 
-        public async Task<ItemDto?> GetItemAsync(int id, CancellationToken ct)
+        public async Task<ItemDto?> GetItemAsync(int id, CancellationToken ct = default)
         {
             return await GetCachedAsync(
                 key: $"hn:item:{id}", ttl: ItemTtl,
@@ -43,7 +44,7 @@ namespace Hn.Api.Services
                 ct);
         }
 
-        public async Task<IReadOnlyList<int>> GetNewestStoriesAsync(CancellationToken ct)
+        public async Task<IReadOnlyList<int>> GetNewestStoriesIdsAsync(CancellationToken ct = default)
         {
             return await GetCachedAsync<IReadOnlyList<int>>(key: "hn:newest", ttl: NewestIdsTtl, factory: async token =>
             {
@@ -51,6 +52,35 @@ namespace Hn.Api.Services
                 return (IReadOnlyList<int>)(ids ?? Array.Empty<int>());
             },
             ct: ct);
+        }
+
+        public async Task<PagedResult<ItemDto>> GetNewestPageAsync(int page, int pageSize, CancellationToken ct = default)
+        {
+            if (page < 1) page = 1;
+            if (pageSize <= 0 || pageSize > 100) pageSize = 20;
+            var ids = await GetNewestStoriesIdsAsync();
+            var total = ids.Count;
+            var skip = (page - 1) * pageSize;
+
+            if (skip >= total)
+                return new PagedResult<ItemDto>(Array.Empty<ItemDto>(), page, pageSize, total, false);
+
+            var slice = ids.Skip(skip).Take(pageSize).ToArray();
+
+            const int maxConcurrency = 8;
+            var gate = new SemaphoreSlim(maxConcurrency);
+            var tasks = slice.Select(async id =>
+            {
+                await gate.WaitAsync(ct);
+                try { return await GetItemAsync(id, ct); }
+                finally { gate.Release(); }
+            });
+
+            var results = await Task.WhenAll(tasks);
+            var items = results.Where(e => e is not null && e.Url is not null)!.Cast<ItemDto>().ToList();
+
+            var hasNext = skip + pageSize < total;
+            return new PagedResult<ItemDto>(items, page, pageSize, total, hasNext);
         }
 
 
@@ -61,33 +91,33 @@ namespace Hn.Api.Services
         TimeSpan ttl,
         Func<CancellationToken, Task<T>> factory,
         CancellationToken ct)
-    {
-        if (_cache.TryGetValue<T>(key, out var cached))
-            return cached!;
-
-        var gate = _locks.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
-        await gate.WaitAsync(ct);
-        try
         {
-            if (_cache.TryGetValue<T>(key, out cached))
+            if (_cache.TryGetValue<T>(key, out var cached))
                 return cached!;
 
-            var value = await factory(ct);
-
-            _cache.Set(key, value!, new MemoryCacheEntryOptions
+            var gate = _locks.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
+            await gate.WaitAsync(ct);
+            try
             {
-                AbsoluteExpirationRelativeToNow = ttl
-            });
+                if (_cache.TryGetValue<T>(key, out cached))
+                    return cached!;
 
-            _logger.LogDebug("Cached {Key} for {Seconds}s", key, ttl.TotalSeconds);
-            return value!;
+                var value = await factory(ct);
+
+                _cache.Set(key, value!, new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = ttl
+                });
+
+                _logger.LogDebug("Cached {Key} for {Seconds}s", key, ttl.TotalSeconds);
+                return value!;
+            }
+            finally
+            {
+                gate.Release();
+                if (gate.CurrentCount == 1) _locks.TryRemove(key, out _);
+            }
         }
-        finally
-        {
-            gate.Release();
-            if (gate.CurrentCount == 1) _locks.TryRemove(key, out _);
-        }
-    }
 
     }
 }

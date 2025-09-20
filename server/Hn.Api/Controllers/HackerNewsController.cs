@@ -12,17 +12,27 @@ namespace Hn.Api.Controllers
     [Route("api/hackernews")]
     public class HackerNewsController(IHackerNewsService hn) : ControllerBase
     {
-        [HttpGet("latest")]
-        public async Task<ActionResult<IReadOnlyList<int>>> GetLatest(CancellationToken ct)
+        [HttpGet("newest")]
+        public async Task<ActionResult<IReadOnlyList<int>>> GetNewest(CancellationToken ct = default)
         {
-            return Ok(await hn.GetNewestStoriesAsync(ct));
+            return Ok(await hn.GetNewestStoriesIdsAsync(ct));
+        }
+
+        [HttpGet("newest/page")]
+        public async Task<ActionResult<PagedResult<ItemDto>>> GetNewestPage(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 20,
+            CancellationToken ct = default)
+        {
+            var result = await hn.GetNewestPageAsync(page, pageSize, ct);
+            return Ok(result);
         }
 
         [HttpGet("item/{id}")]
-    public async Task<ActionResult<ItemDto>> GetItem([FromRoute] int id, CancellationToken ct)
-    {
-        var item = await hn.GetItemAsync(id, ct);
-        return item is null ? NotFound() : Ok(item);
-    }
+        public async Task<ActionResult<ItemDto>> GetItem([FromRoute] int id, CancellationToken ct = default)
+        {
+            var item = await hn.GetItemAsync(id, ct);
+            return item is null ? NotFound() : Ok(item);
+        }
     }
 }
