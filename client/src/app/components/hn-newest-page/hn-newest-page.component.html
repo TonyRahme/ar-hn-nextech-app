@@ -1,1 +1,39 @@
-<p>hn-newest-page works!</p>
+<section class="container">
+    <header class="header">
+      <h2>Newest Stories</h2>
+      <div class="controls">
+        <label>
+          Page size:
+          <select [value]="pageSize" (change)="changePageSize($any($event.target).value)">
+            <option *ngFor="let s of sizes" [value]="s">{{ s }}</option>
+          </select>
+        </label>
+      </div>
+    </header>
+
+    <div class="error" *ngIf="(error$ | async) as err">{{ err }}</div>
+
+    <ng-container *ngIf="(data$ | async) as d; else loadingTpl">
+      <ul class="list">
+        <li *ngFor="let it of d.items; trackBy: trackId">
+          <a *ngIf="it.url; else noLink" [href]="it.url" target="_blank" rel="noopener">
+            {{ it.title || '(no title)' }}
+          </a>
+          <ng-template #noLink>
+            <span>{{ it.title || '(no title)' }}</span>
+          </ng-template>
+          <small>by {{ it.by || 'unknown' }} • score {{ it.score ?? 0 }}</small>
+        </li>
+      </ul>
+
+      <footer class="pager">
+        <button (click)="prev()" [disabled]="page === 1 || (loading$ | async)">Prev</button>
+        <span>Page {{ page }} / {{ totalPages(d) }}</span>
+        <button (click)="next()" [disabled]="!d.hasNext || (loading$ | async)">Next</button>
+      </footer>
+    </ng-container>
+
+    <ng-template #loadingTpl>
+      <div class="loading" *ngIf="(loading$ | async)">Loading…</div>
+    </ng-template>
+  </section>
