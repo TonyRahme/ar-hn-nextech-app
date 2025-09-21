@@ -8,7 +8,20 @@
 
 
     <div class="grid" *ngIf="(data$ | async) as d; else loadingTpl">
-      <mat-card [matBadge]="it.kids?.length" matBadgeColor="accent" class="story-card" *ngFor="let it of d.items; trackBy: trackId">
+      <mat-card class="story-card" *ngFor="let it of d.items; trackBy: trackId">
+        <button *ngIf="it.kids?.length"
+        mat-icon-button
+        class="badge-btn"
+        [matBadge]="it.kids?.length || 0"
+        [matBadgeHidden]="!(it.kids?.length)"
+        matBadgeColor="accent"
+        [matBadgeOverlap]="false"
+        matBadgePosition="before"
+        matBadgeSize="large"
+        (click)="onComments(it)"
+      >
+        <!-- <mat-icon>mode_comment</mat-icon> -->
+      </button>
         <mat-card-header>
           <mat-card-title>
             <h2 class="title">

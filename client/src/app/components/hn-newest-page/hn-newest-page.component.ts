@@ -97,6 +97,25 @@ export class HnNewestPageComponent implements OnInit {
       this.emitParams();
   }
 
+  
+  onPage(e: PageEvent) {
+    this.page = e.pageIndex + 1; //pageIndex is zero-based
+    this.pageSize = e.pageSize;
+    this.emitParams();
+  }
+  
+  trackId(_: number, it: ItemDto) {
+    return it.id;
+  }
+
+  onComments(it: ItemDto) {
+    console.log(it);
+    
+  }
+  
+  
+  //#region HELPER FUNCTIONS
+  
   private emitParams() {
     const search = this.params$.value.search ?? '';
     this.params$.next({
@@ -105,14 +124,5 @@ export class HnNewestPageComponent implements OnInit {
       search: search,
     });
   }
-
-  onPage(e: PageEvent) {
-    this.page = e.pageIndex + 1; //pageIndex is zero-based
-    this.pageSize = e.pageSize;
-    this.emitParams();
-  }
-
-  trackId(_: number, it: ItemDto) {
-    return it.id;
-  }
+  //#endregion
 }
