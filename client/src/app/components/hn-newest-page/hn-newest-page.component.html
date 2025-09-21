@@ -6,6 +6,7 @@
 
     <div class="error" *ngIf="(error$ | async) as err">{{ err }}</div>
 
+
     <div class="grid" *ngIf="(data$ | async) as d; else loadingTpl">
       <mat-card class="story-card" *ngFor="let it of d.items; trackBy: trackId">
         <mat-card-header>
@@ -38,7 +39,14 @@
     </div>
 
     <ng-template #loadingTpl>
-      <div class="loading" *ngIf="(loading$ | async)">Loading…</div>
+      <div class="loading-wrap">
+        <mat-progress-spinner
+          mode="indeterminate"
+          diameter="56"
+          aria-label="Loading stories">
+        </mat-progress-spinner>
+        <div class="loading-text">Loading…</div>
+      </div>
     </ng-template>
 
     <mat-paginator
