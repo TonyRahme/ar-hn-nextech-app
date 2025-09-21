@@ -17,36 +17,45 @@ jobs:
         uses: actions/checkout@v4
 
       # -------- Build Angular --------
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
       - name: Build Angular
+        shell: pwsh
         working-directory: client
         run: |
           npm ci
           npx ng build --configuration production
-          copy web.config dist\*\browser\web.config
+
+          # Find the Angular 'browser' output folder (dist/<app-name>/browser)
+          $browserDir = Get-ChildItem -Directory -Recurse -Path dist | Where-Object { $_.Name -eq 'browser' } | Select-Object -First 1
+          if (-not $browserDir) { throw "Angular browser output not found under client/dist" }
+
+          # Copy SPA web.config into the 'browser' folder
+          Copy-Item -Path web.config -Destination (Join-Path $browserDir.FullName 'web.config') -Force
+
+          # Export for later steps
+          "BROWSER_DIR=$($browserDir.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       # -------- Publish API --------
-      - name: Setup .NET
+      - name: Publish API
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
-
-      - name: Publish API
+      - name: dotnet publish
+        shell: pwsh
         working-directory: server/Hn.Api
-        run: dotnet publish -c Release -o ${{ github.workspace }}\api-publish
+        run: dotnet publish -c Release -o $env:GITHUB_WORKSPACE\api-publish
 
-      # -------- Stage unified package layout --------
+      # -------- Stage unified package (root = SPA, /api = API) --------
       - name: Prepare package
+        shell: pwsh
         run: |
-          mkdir ${{ github.workspace }}\package\wwwroot
-          xcopy /E /I /Y client\dist\*\browser ${{ github.workspace }}\package\wwwroot
-          mkdir ${{ github.workspace }}\package\wwwroot\api
-          xcopy /E /I /Y api-publish ${{ github.workspace }}\package\wwwroot\api
+          New-Item -ItemType Directory -Force -Path $env:GITHUB_WORKSPACE\package\wwwroot | Out-Null
 
+          # Copy Angular build to root
+          Copy-Item -Path "$env:BROWSER_DIR\*" -Destination "$env:GITHUB_WORKSPACE\package\wwwroot" -Recurse -Force
+
+          # Copy API to /api
+          New-Item -ItemType Directory -Force -Path $env:GITHUB_WORKSPACE\package\wwwroot\api | Out-Null
+          Copy-Item -Path "$env:GITHUB_WORKSPACE\api-publish\*" -Destination "$env:GITHUB_WORKSPACE\package\wwwroot\api" -Recurse -Force
       # -------- Deploy to Windows App Service --------
       - name: Deploy
         uses: azure/webapps-deploy@v3
