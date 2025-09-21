@@ -4,6 +4,7 @@
 *.user
 *.suo
 *.ide/
+api-publish/
 
 # node / angular
 client/node_modules/
@@ -11,6 +12,9 @@ node_modules/
 client/dist/
 client/.angular/
 npm-debug.log*
+
+# CI packaging
+package/
 
 # vscode
 .vscode/
