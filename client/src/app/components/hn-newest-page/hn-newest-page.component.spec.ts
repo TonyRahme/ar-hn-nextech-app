@@ -181,5 +181,33 @@ describe('HnNewestPageComponent', () => {
     expect(component.loading$.value).toBeFalse();
   }));
 
+  it('loads page and checks if post has comments renders badge + number of comments', () => {
+
+    //Arrange
+    const page = makePage([
+      {id: 1, title: 'A', kids: [1, 2, 3] },
+      {id: 2, title: 'B' },
+    ], 1, 20, 2, false);
+
+    const badgeClass = '.mat-badge-content.mat-badge-active';
+
+    api.getNewestPage.and.returnValue(of(page));
+    fixture.detectChanges();
+
+    //Assert
+    expect(api.getNewestPage).toHaveBeenCalledWith(1, 20, undefined);
+
+    const cards = fixture.debugElement.queryAll(By.css('mat-card.story-card'));
+    expect(cards.length).toBe(2);
+
+    const badges = fixture.debugElement.queryAll(By.css(badgeClass));
+
+    expect(badges).toBeTruthy();
+    expect(badges.length).toEqual(1);
+    const badge = badges[0];
+    expect(badge).toBeTruthy();
+    expect(badge.nativeElement.textContent).toContain(3);
+  });
+
 
 });
