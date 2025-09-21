@@ -1,16 +1,16 @@
 <mat-toolbar color="primary" class="topbar">
-    <span class="brand">HN Newest</span>
-    <span class="spacer"></span>
+  <div class="toolbar-center">
+    <span class="brand">Latest Hacker News</span>
 
-    <!-- Search input -->
-    <mat-form-field appearance="outline" class="search-field">
+    <mat-form-field  class="search-field">
       <mat-label>Search title or text</mat-label>
       <input matInput
              type="search"
              (input)="onSearch($any($event.target).value)"
-             placeholder="e.g. Rust, AI, Taco" />
+             placeholder="e.g. Rust, LLM, Taco" />
       <button mat-icon-button matSuffix aria-label="Search">
         <mat-icon>search</mat-icon>
       </button>
     </mat-form-field>
+  </div>
 </mat-toolbar>
