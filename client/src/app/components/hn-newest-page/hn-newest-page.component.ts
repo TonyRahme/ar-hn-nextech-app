@@ -17,6 +17,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import {MatBadgeModule} from '@angular/material/badge';
 
 type PageParam = {
   page: number;
@@ -33,7 +34,8 @@ type PageParam = {
     MatCardModule,
     MatPaginatorModule,
     MatIconModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatBadgeModule
   ],
   templateUrl: './hn-newest-page.component.html',
   styleUrls: ['./hn-newest-page.component.scss'],

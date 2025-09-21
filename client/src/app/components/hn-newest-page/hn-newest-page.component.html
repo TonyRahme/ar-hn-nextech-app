@@ -8,7 +8,7 @@
 
 
     <div class="grid" *ngIf="(data$ | async) as d; else loadingTpl">
-      <mat-card class="story-card" *ngFor="let it of d.items; trackBy: trackId">
+      <mat-card [matBadge]="it.kids?.length" matBadgeColor="accent" class="story-card" *ngFor="let it of d.items; trackBy: trackId">
         <mat-card-header>
           <mat-card-title>
             <h2 class="title">
