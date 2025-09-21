@@ -56,7 +56,7 @@ namespace Hn.Tests
             });
         }).CreateClient();
 
-            var resp = await client.GetAsync("/api/hackernews/newest");
+            var resp = await client.GetAsync("/hackernews/newest");
             resp.StatusCode.Should().Be(HttpStatusCode.OK);
 
             var ids = await resp.Content.ReadFromJsonAsync<int[]>();
