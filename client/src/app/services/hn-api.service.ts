@@ -2,13 +2,14 @@ import { EventEmitter, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { ItemDto, PagedResult } from '../models/hackerNews.model';
 import { Observable } from 'rxjs';
+import { environment } from 'environments/environment.prod';
 
 @Injectable({
   providedIn: 'root',
 })
 export class HnApiService {
 
-  private baseUrl = '/api/hackernews';
+  private baseUrl = environment.apiBase;
   public newestSearch: EventEmitter<string>;
   constructor(private http: HttpClient) {
     this.newestSearch = new EventEmitter();

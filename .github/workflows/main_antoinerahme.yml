@@ -1,65 +1,56 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-name: Build and deploy ASP.Net Core app to Azure Web App - antoinerahme
+name: Build & Deploy (Angular + API to single Windows App Service)
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    branches: [ main ]
+    paths:
+      - 'client/**'
+      - 'server/**'
+      - '.github/workflows/main_antoinerahme.yml'
 
 jobs:
-  build:
-    runs-on: windows-latest
-    permissions:
-      contents: read #This is required for actions/checkout
+  build-deploy:
+    runs-on: windows-latest   # windows runner to match paths
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Set up .NET Core
+      # -------- Build Angular --------
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build Angular
+        working-directory: client
+        run: |
+          npm ci
+          npx ng build --configuration production
+          copy web.config dist\*\browser\web.config
+
+      # -------- Publish API --------
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.x'
+          dotnet-version: '9.0.x'
 
-      - name: Build with dotnet
-        run: dotnet build --configuration Release
+      - name: Publish API
+        working-directory: server/Hn.Api
+        run: dotnet publish -c Release -o ${{ github.workspace }}\api-publish
 
-      - name: dotnet publish
-        run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
+      # -------- Stage unified package layout --------
+      - name: Prepare package
+        run: |
+          mkdir ${{ github.workspace }}\package\wwwroot
+          xcopy /E /I /Y client\dist\*\browser ${{ github.workspace }}\package\wwwroot
+          mkdir ${{ github.workspace }}\package\wwwroot\api
+          xcopy /E /I /Y api-publish ${{ github.workspace }}\package\wwwroot\api
 
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v4
-        with:
-          name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
-
-  deploy:
-    runs-on: windows-latest
-    needs: build
-    permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
-
-    steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
-        with:
-          name: .net-app
-      
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_3B80D243B6334FD19373EC86A361C575 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_2D9E0B18C5C045288D3A200FBFC61E09 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_8E1A4F53B0B74B2BB6576A6D7CFC7DEE }}
-
-      - name: Deploy to Azure Web App
-        id: deploy-to-webapp
+      # -------- Deploy to Windows App Service --------
+      - name: Deploy
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'antoinerahme'
-          slot-name: 'Production'
-          package: .
-          
+          app-name: antoinerahme
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+          package: ${{ github.workspace }}\package\wwwroot
