@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Hn.Api.Controllers
 {
     [ApiController]
-    [Route("api/hackernews")]
+    [Route("hackernews")]
     public class HackerNewsController(IHackerNewsService hn) : ControllerBase
     {
         [HttpGet("newest")]
