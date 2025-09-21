@@ -27,8 +27,19 @@ builder.Services.AddHttpClient<IHackerNewsService, HackerNewsService>(client =>
 }).AddStandardResilienceHandler();
 
 var app = builder.Build();
+var pathBase = app.Configuration["ASPNETCORE_PATHBASE"];
+if (!string.IsNullOrWhiteSpace(pathBase))
+{
+    // Make the app behave as if hosted under /api
+    app.UsePathBase(pathBase);
+}
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(c =>
+{
+    // relative path works with or without PathBase
+    c.SwaggerEndpoint("swagger/v1/swagger.json", "HN API v1");
+    c.RoutePrefix = "swagger";
+});
 app.MapControllers();
 app.Run();
 
