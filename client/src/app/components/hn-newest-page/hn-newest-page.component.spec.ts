@@ -7,6 +7,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of, Subject, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { PageEvent } from '@angular/material/paginator';
+import { EventEmitter } from '@angular/core';
 
 
 function makePage(
@@ -44,7 +45,9 @@ describe('HnNewestPageComponent', () => {
   let api: jasmine.SpyObj<HnApiService>;
 
   beforeEach(async () => {
-    api = jasmine.createSpyObj('HnApiService', ['getNewestPage']);
+    api = jasmine.createSpyObj('HnApiService', ['getNewestPage'],
+       {newestSearch: new EventEmitter<string>()}
+    );
     await TestBed.configureTestingModule({
       imports: [HnNewestPageComponent, NoopAnimationsModule],
       providers: [{provide: HnApiService, useValue: api}],
@@ -69,7 +72,7 @@ describe('HnNewestPageComponent', () => {
     fixture.detectChanges();
 
     //Assert
-    expect(api.getNewestPage).toHaveBeenCalledWith(1, 20);
+    expect(api.getNewestPage).toHaveBeenCalledWith(1, 20, undefined);
 
     const cards = fixture.debugElement.queryAll(By.css('mat-card.story-card'));
     expect(cards.length).toBe(2);
@@ -98,7 +101,7 @@ describe('HnNewestPageComponent', () => {
       previousPageIndex: 0,
     } as PageEvent);
 
-    expect(api.getNewestPage).toHaveBeenCalledWith(2, 20);
+    expect(api.getNewestPage).toHaveBeenCalledWith(2, 20, '');
   });
 
   it('renders error message when service fails', () => {
@@ -143,5 +146,40 @@ describe('HnNewestPageComponent', () => {
 
     expect(component.data$.value).toEqual(fastPage);
   }))
+
+  it('resets page back to 1 when a new search term is emitted', fakeAsync(() => {
+    // initial load
+    api.getNewestPage.and.returnValue(of(makePage([{ id: 1 }], 1, 20, 100, true)));
+    fixture.detectChanges();
+
+    // pretend we navigated to page 3
+    component.page = 3;
+
+    // new search -> should reset to page 1
+    api.getNewestPage.calls.reset();
+    api.getNewestPage.and.returnValue(of(makePage([{ id: 9, title: 'Rust' }], 1, 20, 10, true)));
+
+    api.newestSearch.emit('rust');
+    tick(300);
+
+    expect(component.page).toBe(1);
+    expect(api.getNewestPage).toHaveBeenCalledWith(1, 20, 'rust');
+  }));
+
+  it('loading$ is true during request and false after it completes', fakeAsync(() => {
+    const pending$ = new Subject<PagedResult<ItemDto>>();
+    api.getNewestPage.and.returnValue(pending$);
+
+    fixture.detectChanges(); // kicks off initial load
+
+    expect(component.loading$.value).toBeTrue(); // before completion
+
+    pending$.next(makePage([{ id: 1 }]));
+    pending$.complete();
+    tick();
+
+    expect(component.loading$.value).toBeFalse();
+  }));
+
 
 });

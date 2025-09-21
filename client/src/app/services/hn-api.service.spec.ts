@@ -104,4 +104,23 @@ describe('HnApiService', () => {
 
     expect(error).toBeTruthy();
   })
+
+  it('omits search when empty/blank', () => {
+    service.getNewestPage(1, 20, '   ').subscribe(); // blank
+
+    const req = httpMock.expectOne(r =>
+      r.method === 'GET' && r.url.endsWith('/api/hackernews/newest/page')
+    );
+    expect(req.request.params.get('search')).toBeNull();
+
+    const body: PagedResult<ItemDto> = {
+      items: [],
+      page: 1,
+      pageSize: 20,
+      totalCount: 0,
+      hasNext: false,
+    } 
+
+    req.flush(body);
+  });
 });
