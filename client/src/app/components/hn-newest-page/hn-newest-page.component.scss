@@ -12,7 +12,7 @@
 .grow {
   flex: 1 1 auto;
 }
-.muted {
+.total-count {
   opacity: 0.7;
 }
 .grid {
@@ -116,7 +116,7 @@
 .title a {
   text-decoration: none;
 }
-.meta {
+.story-author {
   opacity: 0.75;
 }
 .clamp {
@@ -137,10 +137,6 @@
 .error {
   color: #fca5a5;
   margin: 0.5rem 0;
-}
-.loading {
-  opacity: 0.7;
-  margin: 1rem 0;
 }
 
 .loading-wrap {
