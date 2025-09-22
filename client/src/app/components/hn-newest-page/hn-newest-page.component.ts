@@ -18,6 +18,8 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import {MatBadgeModule} from '@angular/material/badge';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { CommentsDialogComponent } from '../comments-dialog/comments-dialog.component';
 
 type PageParam = {
   page: number;
@@ -35,7 +37,8 @@ type PageParam = {
     MatPaginatorModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatBadgeModule
+    MatBadgeModule,
+    MatDialogModule
   ],
   templateUrl: './hn-newest-page.component.html',
   styleUrls: ['./hn-newest-page.component.scss'],
@@ -53,7 +56,10 @@ export class HnNewestPageComponent implements OnInit {
   loading$ = new BehaviorSubject<boolean>(false);
   error$ = new BehaviorSubject<string | null>(null);
 
-  constructor(private hnApi: HnApiService) {}
+  constructor(
+    private hnApi: HnApiService,
+    private dialog: MatDialog
+  ) {}
 
   ngOnInit() {
     this.hnApi.newestSearch
@@ -108,8 +114,12 @@ export class HnNewestPageComponent implements OnInit {
     return it.id;
   }
 
-  onComments(it: ItemDto) {
-    console.log(it);
+  onComments(item: ItemDto) {
+    this.dialog.open(CommentsDialogComponent, {
+      data: {
+        story: item
+      }
+    })
     
   }
   
