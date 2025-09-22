@@ -1,0 +1,36 @@
+<h3 mat-dialog-title>{{storyItem.title}}</h3>
+<mat-dialog-content class="content">
+    <div class="scrollbar">
+        <ng-container *ngIf="comment$ | async as commentList; else loading">
+          <ng-container *ngIf="!error; else errorTpl">
+                <mat-card class="comment-card" *ngFor="let comment of commentList">
+                   <mat-card-header class="comment-card-header">
+                       <mat-card-title class="comment-author">
+                           {{comment.deleted ? "[deleted]" : comment.by}}
+                       </mat-card-title>
+                       <span class="posted-time">{{comment.time * 1000 | date:"MMM dd, yyyy 'at' HH:mm"}}</span>
+                   </mat-card-header>
+                   <mat-card-content>
+                       <div class="comment-text" [innerHTML]="comment.text || ''"></div>
+                   </mat-card-content>
+                </mat-card>
+            </ng-container>
+          </ng-container>
+        </div>
+    
+    <ng-template #loading>
+          <div class="spinner-wrap">
+            <mat-progress-spinner
+              mode="indeterminate"
+              diameter="40"
+            ></mat-progress-spinner>
+          </div>
+    </ng-template>
+    
+     <ng-template #errorTpl>
+          <div class="error">Failed to load. Try again later.</div>
+    </ng-template>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-stroked-button mat-dialog-close>Close</button>
+</mat-dialog-actions>

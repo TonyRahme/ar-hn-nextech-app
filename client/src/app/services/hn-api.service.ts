@@ -23,4 +23,8 @@ export class HnApiService {
     
     return this.http.get<PagedResult<ItemDto>>(`${this.baseUrl}/newest/page`, { params });
   }
+
+  public getCommentsByStoryId(id: number): Observable<ItemDto[]> {
+    return this.http.get<ItemDto[]>(`${this.baseUrl}/items/${id}/comments`);
+  }
 }

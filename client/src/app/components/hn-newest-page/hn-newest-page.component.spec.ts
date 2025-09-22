@@ -1,4 +1,9 @@
-import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
+import {
+  ComponentFixture,
+  fakeAsync,
+  TestBed,
+  tick,
+} from '@angular/core/testing';
 
 import { HnNewestPageComponent } from './hn-newest-page.component';
 import { ItemDto, PagedResult } from 'src/app/models/hackerNews.model';
@@ -8,7 +13,6 @@ import { of, Subject, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { PageEvent } from '@angular/material/paginator';
 import { EventEmitter } from '@angular/core';
-
 
 function makePage(
   items: Partial<ItemDto>[],
@@ -30,7 +34,7 @@ function makePage(
           kids: i.kids,
           type: i.type,
           text: i.text,
-        } as ItemDto),
+        } as ItemDto)
     ),
     page,
     pageSize,
@@ -45,12 +49,12 @@ describe('HnNewestPageComponent', () => {
   let api: jasmine.SpyObj<HnApiService>;
 
   beforeEach(async () => {
-    api = jasmine.createSpyObj('HnApiService', ['getNewestPage'],
-       {newestSearch: new EventEmitter<string>()}
-    );
+    api = jasmine.createSpyObj('HnApiService', ['getNewestPage'], {
+      newestSearch: new EventEmitter<string>(),
+    });
     await TestBed.configureTestingModule({
       imports: [HnNewestPageComponent, NoopAnimationsModule],
-      providers: [{provide: HnApiService, useValue: api}],
+      providers: [{ provide: HnApiService, useValue: api }],
     }).compileComponents();
     fixture = TestBed.createComponent(HnNewestPageComponent);
     component = fixture.componentInstance;
@@ -61,12 +65,17 @@ describe('HnNewestPageComponent', () => {
   });
 
   it('loads first page on init and renders cards (link + plain title)', () => {
-
     //Arrange
-    const page = makePage([
-      {id: 1, title: 'A', url: 'https://a' },
-      {id: 2, title: 'B' },
-    ], 1, 20, 2, false);
+    const page = makePage(
+      [
+        { id: 1, title: 'A', url: 'https://a' },
+        { id: 2, title: 'B' },
+      ],
+      1,
+      20,
+      2,
+      false
+    );
 
     api.getNewestPage.and.returnValue(of(page));
     fixture.detectChanges();
@@ -87,7 +96,7 @@ describe('HnNewestPageComponent', () => {
   });
 
   it('paginator: moving to next page calls sevice with new page & size', () => {
-    const page = makePage([{id: 1, title: 'A' },], 1, 20, 40, true);
+    const page = makePage([{ id: 1, title: 'A' }], 1, 20, 40, true);
     api.getNewestPage.and.returnValue(of(page));
     fixture.detectChanges();
 
@@ -105,13 +114,15 @@ describe('HnNewestPageComponent', () => {
   });
 
   it('renders error message when service fails', () => {
-    api.getNewestPage.and.returnValue(throwError(() => new Error("skibidi error")));
+    api.getNewestPage.and.returnValue(
+      throwError(() => new Error('skibidi error'))
+    );
     fixture.detectChanges();
 
     const err = fixture.debugElement.query(By.css('.error'));
     expect(err).toBeTruthy();
-    expect(err.nativeElement.textContent).toContain("skibidi error");
-  })
+    expect(err.nativeElement.textContent).toContain('skibidi error');
+  });
 
   it('disables Next when hasNext=false', () => {
     const page = makePage([{ id: 1 }], 1, 20, 1, false);
@@ -126,7 +137,7 @@ describe('HnNewestPageComponent', () => {
     api.getNewestPage.and.returnValue(slow$);
     fixture.detectChanges();
 
-    const fastPage = makePage([{id: 32, title: 'page 2'}], 2, 20, 40, true);
+    const fastPage = makePage([{ id: 32, title: 'page 2' }], 2, 20, 40, true);
     api.getNewestPage.calls.reset();
     api.getNewestPage.and.returnValue(of(fastPage));
 
@@ -134,22 +145,30 @@ describe('HnNewestPageComponent', () => {
       pageIndex: 1,
       pageSize: 20,
       length: 40,
-      previousPageIndex: 0
+      previousPageIndex: 0,
     };
     component.onPage(evt);
     fixture.detectChanges();
 
-    const slowPage = makePage([{ id: 11, title: 'Page 1 (late)' }], 1, 20, 40, true);
+    const slowPage = makePage(
+      [{ id: 11, title: 'Page 1 (late)' }],
+      1,
+      20,
+      40,
+      true
+    );
     slow$.next(slowPage);
     slow$.complete();
     tick(); //flush microtasks
 
     expect(component.data$.value).toEqual(fastPage);
-  }))
+  }));
 
   it('resets page back to 1 when a new search term is emitted', fakeAsync(() => {
     // initial load
-    api.getNewestPage.and.returnValue(of(makePage([{ id: 1 }], 1, 20, 100, true)));
+    api.getNewestPage.and.returnValue(
+      of(makePage([{ id: 1 }], 1, 20, 100, true))
+    );
     fixture.detectChanges();
 
     // pretend we navigated to page 3
@@ -157,7 +176,9 @@ describe('HnNewestPageComponent', () => {
 
     // new search -> should reset to page 1
     api.getNewestPage.calls.reset();
-    api.getNewestPage.and.returnValue(of(makePage([{ id: 9, title: 'Rust' }], 1, 20, 10, true)));
+    api.getNewestPage.and.returnValue(
+      of(makePage([{ id: 9, title: 'Rust' }], 1, 20, 10, true))
+    );
 
     api.newestSearch.emit('rust');
     tick(300);
@@ -181,5 +202,36 @@ describe('HnNewestPageComponent', () => {
     expect(component.loading$.value).toBeFalse();
   }));
 
+  it('loads page and checks if post has comments renders badge + number of comments', () => {
+    //Arrange
+    const page = makePage(
+      [
+        { id: 1, title: 'A', kids: [1, 2, 3] },
+        { id: 2, title: 'B' },
+      ],
+      1,
+      20,
+      2,
+      false
+    );
 
+    const badgeClass = '.mat-badge-content.mat-badge-active';
+
+    api.getNewestPage.and.returnValue(of(page));
+    fixture.detectChanges();
+
+    //Assert
+    expect(api.getNewestPage).toHaveBeenCalledWith(1, 20, undefined);
+
+    const cards = fixture.debugElement.queryAll(By.css('mat-card.story-card'));
+    expect(cards.length).toBe(2);
+
+    const badges = fixture.debugElement.queryAll(By.css(badgeClass));
+
+    expect(badges).toBeTruthy();
+    expect(badges.length).toEqual(1);
+    const badge = badges[0];
+    expect(badge).toBeTruthy();
+    expect(badge.nativeElement.textContent).toContain(3);
+  });
 });

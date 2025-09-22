@@ -1,7 +1,7 @@
 <section class="wrap">
     <div class="controls">
       <span class="grow"></span>
-      <span class="muted" *ngIf="(data$ | async) as d">Total: {{ d.totalCount }}</span>
+      <span class="total-count" *ngIf="(data$ | async) as d">Total: {{ d.totalCount }}</span>
     </div>
 
     <div class="error" *ngIf="(error$ | async) as err">{{ err }}</div>
@@ -9,7 +9,19 @@
 
     <div class="grid" *ngIf="(data$ | async) as d; else loadingTpl">
       <mat-card class="story-card" *ngFor="let it of d.items; trackBy: trackId">
-        <mat-card-header>
+        <button *ngIf="it.kids?.length"
+        mat-icon-button
+        class="badge-btn"
+        [matBadge]="it.kids?.length || 0"
+        [matBadgeHidden]="!(it.kids?.length)"
+        matBadgeColor="accent"
+        [matBadgeOverlap]="false"
+        matBadgePosition="before"
+        matBadgeSize="large"
+        (click)="onComments(it)"
+      >
+      </button>
+        <mat-card-header class="story-card-header">
           <mat-card-title>
             <h2 class="title">
             <a class="title-link"
@@ -23,6 +35,9 @@
             </ng-template>
             </h2>
           </mat-card-title>
+          <mat-card-subtitle>
+          {{ it.time * 1000 | date:"MMM dd, yyyy 'at' HH:mm" }}
+        </mat-card-subtitle>
         </mat-card-header>
 
         <mat-card-content>
@@ -30,8 +45,8 @@
         </mat-card-content>
 
         <mat-card-actions align="end">
-          <span class="meta">by {{ it.by || 'unknown' }}</span>
-          <span class="spacer"></span>
+          <span class="story-author">by {{ it.by || 'unknown' }}</span>
+          
           <mat-icon inline>whatshot</mat-icon>
           <span>{{ it.score ?? 0 }}</span>
         </mat-card-actions>

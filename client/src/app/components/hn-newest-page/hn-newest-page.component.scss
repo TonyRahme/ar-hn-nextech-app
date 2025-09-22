@@ -12,7 +12,7 @@
 .grow {
   flex: 1 1 auto;
 }
-.muted {
+.total-count {
   opacity: 0.7;
 }
 .grid {
@@ -24,14 +24,41 @@
 @media (min-width: 720px) {
   .grid {
     grid-template-columns: repeat(2, 1fr);
-  } /* 2 per row on md+ */
+  }
 }
+
+.badge-btn {
+  position: absolute;
+  
+  top: -8px;
+  right: -8px;
+  width: 2px;
+  height: 2px;
+  z-index: 2;
+}
+
+:host ::ng-deep .badge-btn .mat-badge-content.mat-badge-active {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(0%, 0%);
+  left: auto;
+  bottom: auto;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.story-card-header {
+  margin-bottom: 12px;
+}
+
 .story-card {
   background: #1f2937;
   color: #e5e7eb;
   border: 1px solid #111827;
   min-width: 0;
   width: 100%;
+  position: relative;
 }
 
 .story-card .mat-mdc-card-content,
@@ -89,7 +116,7 @@
 .title a {
   text-decoration: none;
 }
-.meta {
+.story-author {
   opacity: 0.75;
 }
 .clamp {
@@ -110,10 +137,6 @@
 .error {
   color: #fca5a5;
   margin: 0.5rem 0;
-}
-.loading {
-  opacity: 0.7;
-  margin: 1rem 0;
 }
 
 .loading-wrap {

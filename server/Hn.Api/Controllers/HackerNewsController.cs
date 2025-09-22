@@ -29,11 +29,18 @@ namespace Hn.Api.Controllers
             return Ok(result);
         }
 
-        [HttpGet("item/{id}")]
+        [HttpGet("items/{id}")]
         public async Task<ActionResult<ItemDto>> GetItem([FromRoute] int id, CancellationToken ct = default)
         {
             var item = await hn.GetItemAsync(id, ct);
             return item is null ? NotFound() : Ok(item);
+        }
+
+        [HttpGet("items/{id}/comments")]
+        public async Task<ActionResult<ItemDto[]>> GetCommentsByItemId([FromRoute] int id, CancellationToken ct = default)
+        {
+            var comments = await hn.GetItemKidsAsync(id, ct);
+            return Ok(comments);
         }
     }
 }

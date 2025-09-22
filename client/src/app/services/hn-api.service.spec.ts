@@ -25,7 +25,7 @@ describe('HnApiService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('GETs newest page with defaults', () => {
+  it('NewestPage: GETs with defaults', () => {
     let received: PagedResult<ItemDto> | undefined;
     service.getNewestPage().subscribe((e) => received = e);
     const req = httpMock.expectOne(
@@ -61,7 +61,7 @@ describe('HnApiService', () => {
   });
 
 
-  it('handles empty items array', () => {
+  it('NewestPage: handles empty items array', () => {
     let received: PagedResult<ItemDto> | undefined;
     service.getNewestPage(3, 10).subscribe((r) => (received = r));
 
@@ -88,7 +88,7 @@ describe('HnApiService', () => {
     expect(received!.items).toEqual([]);
   });
 
-  it('propagates HTTP errors', () => {
+  it('NewestPage: propagates HTTP errors', () => {
     let error: any;
 
     service.getNewestPage(2, 50).subscribe({
@@ -105,7 +105,7 @@ describe('HnApiService', () => {
     expect(error).toBeTruthy();
   })
 
-  it('omits search when empty/blank', () => {
+  it('NewestPage: omits search when empty/blank', () => {
     service.getNewestPage(1, 20, '   ').subscribe(); // blank
 
     const req = httpMock.expectOne(r =>
@@ -123,4 +123,50 @@ describe('HnApiService', () => {
 
     req.flush(body);
   });
+
+  it('CommentsByStoryId: GETs comment items by id', () => {
+    let received: ItemDto[] = [];
+    const id = 1;
+    service.getCommentsByStoryId(id).subscribe((e) => received = e);
+    const req = httpMock.expectOne(
+      (r) => r.method === 'GET' && r.url.endsWith(`/api/hackernews/items/${id}/comments`)
+    );
+
+    
+    const body: ItemDto[] = [
+      {
+          id: 101, time: 0, title: 'Comment A',
+          deleted: false,
+          dead: false
+        },
+        {
+          id: 102, time: 0, title: 'Comment B',
+          deleted: false,
+          dead: false
+        },
+    ];
+
+    req.flush(body);
+
+    expect(received).toBeTruthy();
+    expect(received!.length).toBe(2);
+  });
+
+  it('CommentsByStoryId: handles empty items array', () => {
+    let received: ItemDto[] | undefined;
+    const id = 3;
+    service.getCommentsByStoryId(id).subscribe((r) => (received = r));
+
+    const req = httpMock.expectOne(
+      (r) => r.method === 'GET' && r.url.endsWith(`/api/hackernews/items/${id}/comments`)
+    );
+
+    const body: ItemDto[] = [];
+
+    req.flush(body);
+
+    expect(received).toBeTruthy();
+    expect(received!).toEqual([]);
+  });
+
 });

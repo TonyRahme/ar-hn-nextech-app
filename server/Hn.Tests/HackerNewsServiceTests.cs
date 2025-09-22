@@ -146,6 +146,47 @@ namespace Hn.Tests
         }
 
         [Fact]
+        public async Task When_Story_Has_Comments_Should_Return_ItemDtoList()
+        {
+            var mock = new MockHttpMessageHandler();
+            mock.Expect($"{BASE_URL}item/1.json")
+            .Respond("application/json", """{"id":1,"title":"foo a", "kids": [201, 202, 203, 204]}""");
+
+            mock.Expect($"{BASE_URL}item/201.json").Respond("application/json", """{"id":201,"title":"foo comment a"}""");
+            mock.Expect($"{BASE_URL}item/202.json").Respond("application/json", """{"id":202,"title":"foo comment b"}""");
+            mock.Expect($"{BASE_URL}item/203.json").Respond("application/json", """{"id":203,"title":"foo comment c"}""");
+            mock.Expect($"{BASE_URL}item/204.json").Respond("application/json", """{"id":204,"title":"bar"}""");
+
+
+            var service = CreateService(mock, out var cache);
+
+            var comments = await service.GetItemKidsAsync(1, CancellationToken.None);
+
+            comments.Should().NotBeNull();
+            comments.Select(e => e.Id).Should().Equal(201, 202, 203, 204);
+
+            mock.VerifyNoOutstandingExpectation();
+            cache.Dispose();
+        }
+
+        [Fact]
+        public async Task When_Story_Has_Empty_Kids_Should_Return_EmptyList()
+        {
+            var mock = new MockHttpMessageHandler();
+            mock.Expect($"{BASE_URL}item/1.json")
+            .Respond("application/json", """{"id":1,"title":"foo a"}""");
+
+            var service = CreateService(mock, out var cache);
+
+            var comments = await service.GetItemKidsAsync(1, CancellationToken.None);
+
+            comments.Should().BeEmpty();
+
+            mock.VerifyNoOutstandingExpectation();
+            cache.Dispose();
+        }
+
+        [Fact]
     public async Task When_Empty_Newstories_Should_Return_Empty_Page()
     {
         var mock = new MockHttpMessageHandler();

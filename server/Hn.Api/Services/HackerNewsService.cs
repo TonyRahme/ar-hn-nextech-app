@@ -95,6 +95,13 @@ namespace Hn.Api.Services
             return new PagedResult<ItemDto>(matches, page, pageSize, totalMatches, hasNext);
         }
 
+        public async Task<ItemDto[]> GetItemKidsAsync(int id, CancellationToken ct = default)
+        {
+            var story = await GetItemAsync(id, ct);
+            if (story == null || story.Kids == null) return Array.Empty<ItemDto>().ToArray();
+            var comments = await FetchItems(story.Kids, ct);
+            return comments.ToArray();
+        }
 
         //Helper functions
 
